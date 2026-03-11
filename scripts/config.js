@@ -108,6 +108,7 @@ export default class Config {
     iconColor: "#FF3A4C"
   }
   static #powerUpSpawnInterval = 7000;
+  static #maxPowerUpCount = 3;
   static #powerUps = [
     {
       type: "speed",
@@ -173,5 +174,6 @@ export default class Config {
   static get snakePatterns() { return this.#snakePatterns; }
   static get normalFood() { return this.#normalFood; }
   static get powerUpSpawnInterval() { return this.#powerUpSpawnInterval; }
+  static get maxPowerUpCount() { return this.#maxPowerUpCount; }
   static get powerUps() { return this.#powerUps; }
 }
