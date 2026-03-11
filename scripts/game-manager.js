@@ -69,6 +69,7 @@ export default class gameManager {
   #lastPowerUpSpawnedTime;
 
   #powerUpSpawnInterval;
+  #maxPowerUpCount;
 
   #direction = -1;
   #newDirection = -1;
@@ -112,7 +113,7 @@ export default class gameManager {
     this.#lastPowerUpSpawnedTime = Date.now();
 
     this.#score = 0;
-    this.#highScore = localStorage.getItem('highScore');
+    this.#highScore = Number(localStorage.getItem('highScore')) || 0;
 
     this.#powerUpSpawnInterval = Config.powerUpSpawnInterval;
     this.#maxPowerUpCount = Config.maxPowerUpCount;
@@ -250,7 +251,7 @@ export default class gameManager {
     this.#updatePowerUps();
     if (this.#snakeIsColliding()) {
       this.#gameOver = true;
-      this.#onGameOver();
+      this.#executeIfExists(this.#onGameOver);
       this.resetGame();
       return;
     }
@@ -274,6 +275,9 @@ export default class gameManager {
   #updatePowerUps() {
     this.#handlePowerUpDespawn();
 
+    const powerUpCount = this.#foods.filter(food => food && food.type != 'normal').length;
+    if (powerUpCount >= this.#maxPowerUpCount) return;
+
     const now = Date.now();
     const timeSinceLastPowerUp = now - this.#lastPowerUpSpawnedTime;
     if (timeSinceLastPowerUp < this.#powerUpSpawnInterval) return;
@@ -282,9 +286,13 @@ export default class gameManager {
   }
 
   #spawnPowerUp() {
-    const { x, y } = this.#getRandomCoordinatesObject();
-    const randomPowerUp = this.#getRandomPowerUp();
-    const powerUp = { x, y, ...randomPowerUp };
+    let powerUp;
+    do {
+      const { x, y } = this.#getRandomCoordinatesObject();
+      const randomPowerUp = this.#getRandomPowerUp();
+      powerUp = { x, y, ...randomPowerUp };
+    } while (this.#overlapsWithSnake(powerUp.x, powerUp.y));
+
     this.#foods.push(powerUp);
     this.#lastPowerUpSpawnedTime = Date.now();
   }
@@ -318,6 +326,7 @@ export default class gameManager {
     const { x, y } = this.#getNewSnakeHead();
     if (this.#isOutOfBounds(x, y)) return true;
     if (this.#overlapsWithSnake(x, y)) return true;
+    return false;
   }
 
   #isOutOfBounds(x, y) {
